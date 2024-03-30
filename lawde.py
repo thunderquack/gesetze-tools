@@ -81,7 +81,7 @@ class Lawde:
     def load(self, laws):
         total = len(laws)
         print(f"Total laws to download: {total}")
-        with ThreadPoolExecutor(max_workers=20) as executor:
+        with ThreadPoolExecutor(max_workers=100) as executor:
             future_to_law = {executor.submit(self.download_and_store, law): law for law in laws}
             for future in as_completed(future_to_law):
                 law = future_to_law[future]
