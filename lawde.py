@@ -78,11 +78,13 @@ class Lawde:
         print(f"Finished download for: {law}")
         return law, zipfile
 
-    def load_laws_concurrently(self, law_batch):
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = {executor.submit(self.download_and_store, law): law for law in law_batch}
-            for future in as_completed(futures):
-                law = futures[future]
+    def load(self, laws):
+        total = len(laws)
+        print(f"Total laws to download: {total}")
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            future_to_law = {executor.submit(self.download_and_store, law): law for law in laws}
+            for future in as_completed(future_to_law):
+                law = future_to_law[future]
                 try:
                     law, zipfile = future.result()
                 except Exception as exc:
@@ -90,20 +92,6 @@ class Lawde:
                 else:
                     if zipfile is not None:
                         print(f'Successfully downloaded and stored: {law}')
-    def load(self, laws):
-        # Разбиваем список законов на пакеты по 100 штук
-        law_batches = [laws[i:i + 100] for i in range(0, len(laws), 100)]
-        total_batches = len(law_batches)
-        print(f"Total batches to download: {total_batches}")
-
-        for batch_index, batch in enumerate(law_batches):
-            print(f"Downloading batch {batch_index+1} out of {total_batches}")
-            ts1 = datetime.datetime.now()
-            self.load_laws_concurrently(batch)
-            ts2 = datetime.datetime.now()
-            ts_diff = ts2 - ts1
-            estimated_total_time = ts_diff * total_batches
-            print(f"Estimated total download time: {estimated_total_time}")
 
     def build_law_path(self, law):
         prefix = law[0]
@@ -132,7 +120,7 @@ class Lawde:
                     law_filename = law_path / f'{law}.xml'
                 else:
                     law_filename = name
-                with open(law_filename, 'w') as f:
+                with open(law_filename, 'w', encoding='utf-8') as f:
                     f.write(xml.decode('utf-8'))
             else:
                 zipf.extract(name, law_path)
