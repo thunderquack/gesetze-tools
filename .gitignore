@@ -1,3 +1,4 @@
 laws
 laws-md
 .venv
+.vscode/launch.json
