@@ -69,21 +69,40 @@ class Lawde:
             return None
         return zipf
 
+    def download_and_store(self, law):
+        print(f"Starting download for: {law}")
+        zipfile = self.download_law(law)
+        if zipfile is not None:
+            self.store(law, zipfile)
+        print(f"Finished download for: {law}")
+        return law, zipfile
+
+    def load_laws_concurrently(self, law_batch):
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(self.download_and_store, law): law for law in law_batch}
+            for future in as_completed(futures):
+                law = futures[future]
+                try:
+                    law, zipfile = future.result()
+                except Exception as exc:
+                    print(f'{law} generated an exception: {exc}')
+                else:
+                    if zipfile is not None:
+                        print(f'Successfully downloaded and stored: {law}')
     def load(self, laws):
-        total = float(len(laws))
-        ts1 = datetime.datetime.now()
-        print(f"Laws to download: {len(laws)}")
-        for i, law in enumerate(laws):
-            if i == 9:
-                ts2 = datetime.datetime.now()
-                ts_diff = ts2 - ts1
-                print(
-                    f"Estimated download time: {len(laws)/10 * ts_diff.seconds/60:.1f} minutes")
-            if i % 10 == 0:
-                print(f'{i / total * 100:.1f}%')
-            zipfile = self.download_law(law)
-            if zipfile is not None:
-                self.store(law, zipfile)
+        # Разбиваем список законов на пакеты по 100 штук
+        law_batches = [laws[i:i + 100] for i in range(0, len(laws), 100)]
+        total_batches = len(law_batches)
+        print(f"Total batches to download: {total_batches}")
+
+        for batch_index, batch in enumerate(law_batches):
+            print(f"Downloading batch {batch_index+1} out of {total_batches}")
+            ts1 = datetime.datetime.now()
+            self.load_laws_concurrently(batch)
+            ts2 = datetime.datetime.now()
+            ts_diff = ts2 - ts1
+            estimated_total_time = ts_diff * total_batches
+            print(f"Estimated total download time: {estimated_total_time}")
 
     def build_law_path(self, law):
         prefix = law[0]
