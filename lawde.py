@@ -30,6 +30,7 @@ import shutil
 import time
 import zipfile
 from xml.dom.minidom import parseString
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from docopt import docopt
 import requests
