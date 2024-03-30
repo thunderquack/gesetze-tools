@@ -31,6 +31,8 @@ import time
 import zipfile
 from xml.dom.minidom import parseString
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import concurrent
+from tqdm import tqdm
 
 from docopt import docopt
 import requests
@@ -71,27 +73,25 @@ class Lawde:
         return zipf
 
     def download_and_store(self, law):
-        print(f"Starting download for: {law}")
         zipfile = self.download_law(law)
         if zipfile is not None:
             self.store(law, zipfile)
-        print(f"Finished download for: {law}")
         return law, zipfile
 
     def load(self, laws):
         total = len(laws)
         print(f"Total laws to download: {total}")
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            future_to_law = {executor.submit(self.download_and_store, law): law for law in laws}
-            for future in as_completed(future_to_law):
-                law = future_to_law[future]
+        with ThreadPoolExecutor(max_workers=50) as executor:
+            law_futures = {executor.submit(self.download_and_store, law): law for law in laws}
+            for future in tqdm(as_completed(law_futures), total=total, desc="Downloading laws"):
+                law = law_futures[future]
                 try:
                     law, zipfile = future.result()
                 except Exception as exc:
                     print(f'{law} generated an exception: {exc}')
                 else:
                     if zipfile is not None:
-                        print(f'Successfully downloaded and stored: {law}')
+                        pass
 
     def build_law_path(self, law):
         prefix = law[0]
