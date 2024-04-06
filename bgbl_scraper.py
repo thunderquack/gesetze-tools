@@ -45,6 +45,13 @@ class BGBLScraper:
 
     def downloadToc(self, toc_id = 0):
         response = self.downloadUrl('ajax.xav', {'q': 'toclevel', 'n': str(toc_id)})
+        items = response['items']
+        for i, item in enumerate(items):
+            if item['l'] == 'Startseite':
+                if i+1 < len(items):
+                    return items[i+1]
+                else:
+                    return None
         return response['items'][0]
 
     def downloadText(self, toc_id, doc_id) -> lxml.html.HtmlElement:
