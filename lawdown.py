@@ -23,10 +23,10 @@ import shutil
 import re
 from xml import sax
 from collections import defaultdict
-from textwrap import wrap
 from io import StringIO
 
 import yaml
+import os
 
 
 DEFAULT_YAML_HEADER = {
@@ -89,14 +89,14 @@ class LawToMarkdown(sax.ContentHandler):
                               (len(self.last_list_index) + 1))
             first_indent = f" {self.indent_by[0:space_count]}"
             self.last_list_index = None
-        for line in wrap(text):
-            if first_indent:
-                self.out(first_indent)
-            else:
-                self.out(self.indent_by * indent)
-                line = self.list_start_re.sub('\\1\\.', line)
-            first_indent = ''
-            self.write(line)
+        line = text
+        if first_indent:
+            self.out(first_indent)
+        else:
+            self.out(self.indent_by * indent)
+            line = self.list_start_re.sub('\\1\\.', line)
+        first_indent = ''
+        self.write(line)
 
     def flush_text(self):
         if self.text.strip():
@@ -384,7 +384,7 @@ def law_to_markdown(filein, fileout=None, name=None):
         ret = True
     parser = sax.make_parser()
     if name is None:
-        orig_slug = filein.name.split('/')[-1].split('.')[0]
+        orig_slug = filein.name.split(os.sep)[-1].split('.')[0]
     else:
         orig_slug = name
     handler = LawToMarkdown(fileout, orig_slug=orig_slug)
@@ -407,7 +407,7 @@ def main(arguments):
             continue
         paths.add(inpath)
         law_name = inpath.name
-        with open(filename, "r") as infile:
+        with open(filename, "r", encoding='utf-8') as infile:
             out = law_to_markdown(infile)
         slug = out.filename
         outpath = (Path(arguments['<outputpath>']) / slug[0] / slug).resolve()
@@ -421,7 +421,7 @@ def main(arguments):
                 continue
             part_filename = part.name
             shutil.copy(part, outpath / part_filename)
-        with open(outfilename, 'w') as outfile:
+        with open(outfilename, 'w', encoding='utf-8') as outfile:
             outfile.write(out.getvalue())
         out.close()
 

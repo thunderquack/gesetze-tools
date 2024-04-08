@@ -98,7 +98,7 @@ class Lawde:
         return self.path / prefix / law
 
     def remove_law(self, law):
-        print(f"Removing {law}")
+        #print(f"Removing {law}")
         law_path = self.build_law_path(law)
         shutil.rmtree(law_path, ignore_errors=True)
 
@@ -126,7 +126,7 @@ class Lawde:
                 zipf.extract(name, law_path)
 
     def get_all_laws(self):
-        with open(self.lawlist) as f:
+        with open(self.lawlist, encoding='utf-8') as f:
             return [law['slug'] for law in json.load(f)]
 
     def loadall(self):
@@ -152,7 +152,7 @@ class Lawde:
                     'slug': match[0],
                     'name': match[1].replace('&quot;', '"')
                 })
-        with open(self.lawlist, 'w') as f:
+        with open(self.lawlist, 'w', encoding='utf-8') as f:
             json.dump(laws, f, indent=4)
 
 
