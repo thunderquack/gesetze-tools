@@ -152,9 +152,9 @@ class Lawde:
                     'slug': match[0],
                     'name': match[1].replace('&quot;', '"')
                 })
+        print(f"Found {len(laws)} laws")
         with open(self.lawlist, 'w', encoding='utf-8') as f:
             json.dump(laws, f, indent=4)
-
 
 def main(arguments):
     nice_arguments = {}
