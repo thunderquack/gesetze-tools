@@ -58,10 +58,10 @@ class Lawde:
             except Exception as e:
                 tries += 1
                 print(e)
-                if tries > 3:
+                if tries > 5:
                     raise e
                 else:
-                    print(f"Sleeping {tries}" * 3)
+                    print(f"Sleeping {tries}\n")
                     time.sleep(tries * 3)
             else:
                 break
